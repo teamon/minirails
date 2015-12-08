@@ -12,6 +12,15 @@ define "source" do |app|
     end
   end
 
+  class CreateSomeUsersToStartWith < ActiveRecord::Migration
+    def change
+      User.create! [
+        {name: "Jon", email: "jon@example.com"},
+        {name: "Hodor", email: "hodor@example.com"}
+      ]
+    end
+  end
+
   # Models
   class User < ActiveRecord::Base
   end
