@@ -2,6 +2,10 @@
 
 > Run example rails app from single file
 
+Inspired by [The Smallest Rails App](http://thesmallestrailsapp.com/), I wanted to easily try various concepts inside rails apps without having to deal with all that bloat from standard rails directory structure.
+
+And I went even further, not only reducing full rails app into single file (that has already been done) but to reducing a set of rails apps into single file :sunglasses:
+
 ## Installation
 
 ```
@@ -27,11 +31,12 @@ define do |app|
 end
 ```
 
-and then run
+then run
 ```
 $ minirails myapp.rb
 ```
 
+and that's it - you now have fully functional rails app running on port 5000!
 
 ## Advanced usage
 
@@ -54,6 +59,8 @@ define "two" do |app|
   end
 end
 ```
+
+They will be run on ports 5000 and 5100 (and 5200 etc.)
 
 ### Database setup
 
