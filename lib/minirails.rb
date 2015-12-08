@@ -21,15 +21,30 @@ module Minirails
     def start(num)
       boot
 
-      $stderr.puts "--> Loading rails"
+      $stderr.puts "--> loading rails"
       require "action_controller"
       require "rails"
-      require "active_record/railtie"
-      $stderr.puts "--> Loading app"
+      $stderr.puts "--> loading app"
 
-      # require "pry"; binding.pry
+      Rack::Handler::WEBrick.run(endpoint(num), :Port => ENV["PORT"])
+    end
 
-      Rack::Handler::WEBrick.run(apps[num].endpoint, :Port => ENV["PORT"])
+    def endpoint(num)
+      apps[num].endpoint
+    rescue NameError => e
+      # autoloading has some crazy weird error
+      # and we can't just require activerecord upfront
+      # because if app is not using it there will
+      # be no database configuration
+      case e.message
+      when /uninitialized constant.*ActiveRecord/
+        $stderr.puts "--> loading activerecord"
+        require "active_record/railtie"
+      else
+        raise e
+      end
+
+      endpoint(num)
     end
 
     def spawn
