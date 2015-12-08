@@ -72,12 +72,18 @@ OPTIONS:
         blank:  App
       }[type]
 
-      apps << klazz.new(name, block)
+      if opts[:initialize]
+        parent = apps.find {|a| a.name == opts[:initialize] }
+        apps << WrappedApp.new(klazz.new(name, block), parent)
+      else
+        apps << klazz.new(name, block)
+      end
     end
 
     # internals
     def start(num)
       boot
+      apps[num].init
       apps[num].call
     end
 
@@ -110,23 +116,57 @@ OPTIONS:
   end
 
   class App < Struct.new(:name, :block)
+    def init
+    end
+
     def call
       block.call
     end
   end
 
-  class RackApp < Struct.new(:name, :block)
-    def call
-      require "rack"
-      Rack::Handler::WEBrick.run(endpoint, :Port => ENV["PORT"])
+  class WrappedApp < Struct.new(:app, :parent)
+    def name
+      app.name
     end
 
-    def endpoint
-      block.call
+    def init
+      parent.init
+      app.init
+    end
+
+    def call
+      app.call
+    end
+  end
+
+  class RackApp < App
+    def init
+      require "rack"
+      @endpoint = block.call
+    end
+
+    def call
+      Rack::Handler::WEBrick.run(@endpoint, :Port => ENV["PORT"])
     end
   end
 
   class RailsApp < RackApp
+    def init
+      $stderr.puts "--> loading rails"
+      require "action_controller"
+      require "rails"
+      $stderr.puts "--> loading app"
+
+      @endpoint = endpoint
+    end
+
+    def call
+      migrate
+      super
+    end
+
+    protected
+
     def build
       # basic rails app bootstrap
       app = Class.new(Rails::Application) do
@@ -146,10 +186,15 @@ OPTIONS:
       # execute 'define' block
       block.call(app)
 
+      # and finally return app object
+      app
+    end
+
+    def migrate
       # ActiveRecord post functions
-      if app.config.respond_to?(:active_record)
+      if @endpoint.config.respond_to?(:active_record)
         # load rake tasks
-        app.load_tasks
+        @endpoint.load_tasks
 
         # create and migrate database
         Rake::Task["db:drop"].invoke
@@ -161,21 +206,9 @@ OPTIONS:
           }.min
         }.each {|e| e.migrate :up }
       end
-
-      # and finally return app object
-      app
     end
 
     def endpoint
-      $stderr.puts "--> loading rails"
-      require "action_controller"
-      require "rails"
-      $stderr.puts "--> loading app"
-
-      make_endpoint
-    end
-
-    def make_endpoint
       build
     rescue NameError => e
       # autoloading has some crazy weird error
@@ -190,7 +223,7 @@ OPTIONS:
         raise e
       end
 
-      make_endpoint
+      endpoint
     end
   end
 end

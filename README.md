@@ -145,6 +145,24 @@ define "worker", type: :blank do
 end
 ```
 
+### Running worker with Rails env loaded
+```ruby
+define "my-rails-app" do |app|
+  app.routes.draw do
+    get "/", to: proc {|*| [200, {}, "Hello from Rails".lines] }
+  end
+end
+
+# you can use :initialize option to load rails (or some rack)
+# before loading worker code (similar to `rake environment`)
+define "worker", type: :blank, initialize: "my-rails-app" do
+  loop do
+    Rails.logger.debug "Hello from worker with Rails env"
+    sleep 1
+  end
+end
+```
+
 ## FAQ
 
 - **How to speed up loading?**
