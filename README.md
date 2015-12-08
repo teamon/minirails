@@ -4,7 +4,11 @@
 
 Inspired by [The Smallest Rails App](http://thesmallestrailsapp.com/), I wanted to easily try various concepts inside rails apps without having to deal with all that bloat from standard rails directory structure.
 
-And I went even further, not only reducing full rails app into single file (that has already been done) but to reducing a set of rails apps into single file :sunglasses:
+I went even further, not only reducing full rails app into single file (that has already been done) but to reducing a set of rails apps into single file :sunglasses:
+
+More seriously, you can now create whole microservice architecture within a singe file and somebody else will be able to grasp it all and execute it locally. Or you can easily make a single file app and post it to StackOverflow (and people can actually run this code)
+
+Just think about it. Proof of Concepts. Asking questions. Explaining concepts.
 
 ## Installation
 
@@ -83,6 +87,17 @@ define "source" do |app|
       end
     end
   end
+
+  # Seeds (using migartions)
+  class CreateSomeUsersToStartWith < ActiveRecord::Migration
+    def change
+      User.create! [
+        {name: "Jon", email: "jon@example.com"},
+        {name: "Hodor", email: "hodor@example.com"}
+      ]
+    end
+  end
+
 
   # Models
   class User < ActiveRecord::Base
