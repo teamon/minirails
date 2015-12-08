@@ -113,6 +113,38 @@ define "source" do |app|
 end
 ```
 
+
+### Non-rails apps
+
+You can start any rack compatible web app inside define block
+or even generic worker process (sidekiq, clock, whatever)
+by specifying `:type` option.
+
+```ruby
+# file: types.rb
+# usage: $ minirails types.rb
+
+# this is rails app
+define "rails" do |app|
+  app.routes.draw do
+    get "/", to: proc {|*| [200, {}, "Hello from Rails".lines] }
+  end
+end
+
+# with type: :rack you need to return Rack-compatible app
+define "rack", type: :rack do
+  proc {|*| [200, {}, "Hello from Rack".lines] }
+end
+
+# with type: :blank you can run anything
+define "worker", type: :blank do
+  loop do
+    $stderr.puts "Hello from worker"
+    sleep 1
+  end
+end
+```
+
 ## FAQ
 
 - **How to speed up loading?**
