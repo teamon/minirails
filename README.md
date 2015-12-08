@@ -23,7 +23,7 @@ Create a file `myapp.rb` with the following content
 ```ruby
 # myapp.rb
 define do |app|
-  class ::MainController < ActionController::Base
+  class MainController < ActionController::Base
     def index
       render text: "Hello"
     end
@@ -122,11 +122,6 @@ end
 - **How to speed up loading?**
 
   Run `$ minirails --fast` and then use `bin/minirails myapp.rb` instead
-
-
-- **I'm getting "constant not found" errors!**
-
-  You need to prefix your classes with `::` to put them in top level scope
 
 
 ## Contributing

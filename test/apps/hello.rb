@@ -1,5 +1,5 @@
 define "hello" do |app|
-  class ::MainController < ActionController::Base
+  class MainController < ActionController::Base
     def index
       render text: "Hello"
     end

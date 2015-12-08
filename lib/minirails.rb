@@ -53,9 +53,11 @@ OPTIONS:
     end
 
     def start(specfile, num = nil)
-      builder = Builder.new(specfile)
+      self.builder = Builder.new(specfile)
       num ? builder.start(num.to_i) : builder.spawn
     end
+
+    attr_accessor :builder
   end
 
 
@@ -119,7 +121,7 @@ OPTIONS:
     end
 
     def boot
-      eval File.read(specfile)
+      load specfile
     end
   end
 
@@ -167,4 +169,9 @@ OPTIONS:
       @endpoint ||= build
     end
   end
+end
+
+# Public DSL API
+def define(*args, &block)
+  Minirails.builder.define(*args, &block)
 end
