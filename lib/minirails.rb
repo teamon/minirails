@@ -1,15 +1,63 @@
 require "minirails/version"
 
 module Minirails
-  def self.run(argv)
-    builder = Builder.new(argv[0])
+  class << self
+    def run(argv)
+      case argv[0]
+      when "--init"
+        init
+      when "--fast"
+        fast
+      when "--help", nil
+        help
+      else
+        if argv[0].start_with?("--")
+          help
+        else
+          start(argv[0], argv[1])
+        end
+      end
+    end
 
-    if argv[1]
-      builder.start(argv[1].to_i)
-    else
-      builder.spawn
+    def help
+      puts <<-EOS
+Usage: #$0 [OPTIONS] [FILE]
+
+$ #$0 myapp.rb
+
+OPTIONS:
+  --help  Show this message
+  --init  Create new sample app
+  --fast  Setup faster app loading
+      EOS
+    end
+
+    def init
+      File.open("myapp.rb", "w") do |f|
+        f.write File.read(File.expand_path("../../test/apps/hello.rb", __FILE__))
+      end
+
+      puts "You new app has been created! You can strat it with $ minirails myapp.rb"
+    end
+
+    def fast
+      File.open("Gemfile", "w") do |f|
+        f.puts %Q|source "https://rubygems.org"|
+        f.puts %Q|gem "minirails"|
+      end
+
+      system "bundle install"
+      system "bundle binstubs minirails --force"
+
+      puts "Now you can use much faster bin/minirails instead of minirails"
+    end
+
+    def start(specfile, num = nil)
+      builder = Builder.new(specfile)
+      num ? builder.start(num.to_i) : builder.spawn
     end
   end
+
 
   class Builder < Struct.new(:specfile)
     # DSL API
