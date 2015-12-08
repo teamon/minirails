@@ -151,7 +151,12 @@ OPTIONS:
         # create and migrate database
         Rake::Task["db:drop"].invoke
         Rake::Task["db:create"].invoke
-        ActiveRecord::Migration.descendants.each {|e| e.migrate :up }
+        # run migrations in order they were defined in source file
+        ActiveRecord::Migration.descendants.sort_by {|c|
+          c.instance_methods(false).map {|m|
+            c.instance_method(m).source_location.last
+          }.min
+        }.each {|e| e.migrate :up }
       end
 
       # and finally return app object
