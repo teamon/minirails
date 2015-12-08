@@ -9,10 +9,6 @@ Gem::Specification.new do |spec|
   spec.authors       = ["Tymon Tobolski"]
   spec.email         = ["i@teamon.eu"]
 
-  if spec.respond_to?(:metadata)
-    spec.metadata['allowed_push_host'] = "TODO: Set to 'http://mygemserver.com' to prevent pushes to rubygems.org, or delete to allow pushes to any server."
-  end
-
   spec.summary       = %q{Smallest Rails Apps launcher}
   spec.description   = %q{Smallest Rails Apps launcher}
   spec.homepage      = "http://github.com/teamon/minirails"
