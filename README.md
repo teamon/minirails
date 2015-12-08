@@ -79,18 +79,14 @@ define "source" do |app|
   ENV["DATABASE_URL"] = "postgresql://localhost/minirails_test"
 
   # Migrations
-  class CreateUsers < ActiveRecord::Migration
+  class Migrations < ActiveRecord::Migration
     def change
       create_table :users do |t|
         t.string :name
         t.string :email
       end
-    end
-  end
 
-  # Seeds (using migartions)
-  class CreateSomeUsersToStartWith < ActiveRecord::Migration
-    def change
+      # Seeds
       User.create! [
         {name: "Jon", email: "jon@example.com"},
         {name: "Hodor", email: "hodor@example.com"}
