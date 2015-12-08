@@ -62,39 +62,23 @@ OPTIONS:
 
 
   class Builder < Struct.new(:specfile)
+
     # DSL API
-    def define(name = nil, &block)
-      apps << App.new(name, block)
+    def define(name = nil, opts = {}, &block)
+      type = opts[:type] || :rails
+      klazz = {
+        rails:  RailsApp,
+        rack:   RackApp,
+        blank:  App
+      }[type]
+
+      apps << klazz.new(name, block)
     end
 
     # internals
     def start(num)
       boot
-
-      $stderr.puts "--> loading rails"
-      require "action_controller"
-      require "rails"
-      $stderr.puts "--> loading app"
-
-      Rack::Handler::WEBrick.run(endpoint(num), :Port => ENV["PORT"])
-    end
-
-    def endpoint(num)
-      apps[num].endpoint
-    rescue NameError => e
-      # autoloading has some crazy weird error
-      # and we can't just require activerecord upfront
-      # because if app is not using it there will
-      # be no database configuration
-      case e.message
-      when /uninitialized constant.*ActiveRecord/
-        $stderr.puts "--> loading activerecord"
-        require "active_record/railtie"
-      else
-        raise e
-      end
-
-      endpoint(num)
+      apps[num].call
     end
 
     def spawn
@@ -126,6 +110,23 @@ OPTIONS:
   end
 
   class App < Struct.new(:name, :block)
+    def call
+      block.call
+    end
+  end
+
+  class RackApp < Struct.new(:name, :block)
+    def call
+      require "rack"
+      Rack::Handler::WEBrick.run(endpoint, :Port => ENV["PORT"])
+    end
+
+    def endpoint
+      block.call
+    end
+  end
+
+  class RailsApp < RackApp
     def build
       # basic rails app bootstrap
       app = Class.new(Rails::Application) do
@@ -166,7 +167,30 @@ OPTIONS:
     end
 
     def endpoint
-      @endpoint ||= build
+      $stderr.puts "--> loading rails"
+      require "action_controller"
+      require "rails"
+      $stderr.puts "--> loading app"
+
+      make_endpoint
+    end
+
+    def make_endpoint
+      build
+    rescue NameError => e
+      # autoloading has some crazy weird error
+      # and we can't just require activerecord upfront
+      # because if app is not using it there will
+      # be no database configuration
+      case e.message
+      when /uninitialized constant.*ActiveRecord/
+        $stderr.puts "--> loading activerecord"
+        require "active_record/railtie"
+      else
+        raise e
+      end
+
+      make_endpoint
     end
   end
 end
